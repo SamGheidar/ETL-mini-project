@@ -4,11 +4,13 @@ import pandas as pd
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
 import requests, os
-import matplotlib.pyplot as plt
+import json
+import pprint
 
 
 CURR_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-raw_dir = CURR_DIR_PATH + "/raw/"
+raw_path = CURR_DIR_PATH + "/raw/"
+harmonized_path = CURR_DIR_PATH + "/harmonized/"
 API_KEY = 'df731731dd73ec2cb7b035dd1faccf7c'
 lat = 59.9
 lon = 17.6
@@ -20,10 +22,28 @@ r = requests.get(URL)
 
 def _raw_to_harmonized():
     df = pd.DataFrame(r)
-    return df.to_json(raw_dir + "raw_data.json")
+    return df.to_json(raw_path + "raw_data.json")
 
 def _harmonized_to_cleansed():
-    pass
+    with open(raw_path + 'raw_data.json') as f:
+        data = json.load(f)
+        #pprint.pprint(data)
+    harmonized_data = []
+    for entry in zip(data):
+        entry = entry.to_dict("records")[0]
+        weather_entry = {
+            "date": entry["list.dt"],
+            "temperature": entry["main.temp"] - 273,
+            "air_pressure": entry["main.pressure"],
+            "precipitation": entry["list.pop"]
+        }
+        harmonized_data.append(weather_entry)
+
+    df = pd.DataFrame(harmonized_data, columns=["date", "tempature", "air_pressure", "precipitation"])
+    df.to_json(harmonized_path + "harmonized.jason")
+        
+
+    
 
 def _cleansed_to_staged():
     pass
