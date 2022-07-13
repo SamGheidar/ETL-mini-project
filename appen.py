@@ -5,7 +5,7 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
 import requests, os
 import json
-import pprint
+
 
 
 CURR_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -29,23 +29,18 @@ def _raw_to_harmonized():
 
 
 def _harmonized_to_cleansed():
-    with open(raw_path + 'raw_data.json') as f:
+    with open(raw_path +'raw_data.json') as f:
         data = json.load(f)
-        #pprint.pprint(data)
-    harmonized_data = []
-    for entry in data:
-        entry = entry.to_dict("records")[0]
-        weather_entry = {
-            "date": entry["list.dt"],
-            "temperature": entry["main.temp"] - 273,
-            "air_pressure": entry["main.pressure"],
-            "precipitation": entry["list.pop"]
-        }
-        harmonized_data.append(weather_entry)
-
-    df = pd.DataFrame(harmonized_data, columns=["date", "tempature", "air_pressure", "precipitation"])
-    df.to_json(harmonized_path + "harmonized.jason")
-        
+        harmonized_data = []
+        df = pd.DataFrame(harmonized_data, columns=['date', 'temperature', 'precipitation', 'air_pressure'])
+        for i in data['list']:
+            weather_entry={
+            'date': i['dt_txt'],
+            'temperature': i['main']['temp'] -273,
+            'precipitation': i['pop'],
+            'air_pressure': i['main']['pressure']}
+            df = df.append(weather_entry, ignore_index=True)
+        df.to_json(harmonized_path + "harmonized_data.json")
 
     
 
