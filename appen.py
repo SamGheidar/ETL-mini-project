@@ -15,21 +15,25 @@ API_KEY = 'df731731dd73ec2cb7b035dd1faccf7c'
 lat = 59.9
 lon = 17.6
 URL = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}"
-r = requests.get(URL)
+
 
 
 
 
 def _raw_to_harmonized():
-    df = pd.DataFrame(r)
-    return df.to_json(raw_path + "raw_data.json")
+    r = requests.get(URL)
+    file_and_path = os.path.join(raw_path, 'raw_data.json')
+    f = open(file_and_path, 'w')
+    f.write(r.text)
+    f.close()
+
 
 def _harmonized_to_cleansed():
     with open(raw_path + 'raw_data.json') as f:
         data = json.load(f)
         #pprint.pprint(data)
     harmonized_data = []
-    for entry in zip(data):
+    for entry in data:
         entry = entry.to_dict("records")[0]
         weather_entry = {
             "date": entry["list.dt"],
