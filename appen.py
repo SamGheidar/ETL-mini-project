@@ -2,15 +2,19 @@ from airflow import DAG
 from datetime import datetime
 import pandas as pd
 from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
+
 import requests, os
 import json
-
+import shutil
+import psycopg2 as ps
+from sqlalchemy import create_engine
 
 
 CURR_DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 raw_path = CURR_DIR_PATH + "/raw/"
 harmonized_path = CURR_DIR_PATH + "/harmonized/"
+cleansed_path = CURR_DIR_PATH + "/cleansed/"
+
 API_KEY = 'df731731dd73ec2cb7b035dd1faccf7c'
 lat = 59.9
 lon = 17.6
@@ -45,10 +49,35 @@ def _harmonized_to_cleansed():
     
 
 def _cleansed_to_staged():
-    pass
+    shutil.copy(harmonized_path + "harmonized_data.json", cleansed_path + "cleansed_data.json")
+
+
+
 
 def _staged_to_modelled():
-    pass
+
+    def postgres_creator():  # sqlalchemy requires callback-function for connections
+        return ps.connect(
+            dbname="etl",  # name of table
+            user="etl_project",
+            password='123456',
+            host="localhost"
+    )
+    postgres_engine = create_engine(
+        url="postgresql+psycopg2://localhost",  # driver identification + dbms api
+        creator=postgres_creator  # connection details
+    )
+
+
+    a = (cleansed_path + "cleansed_data.json")
+
+    with open(a) as json_data:
+        record_list = json.load(json_data)
+        df = pd.DataFrame(record_list)
+        df.to_sql('staged', postgres_engine, if_exists= 'replace', index_label='index')
+        #pd.read_sql('SELECT temperature, air_pressure FROM staged;', postgres_engine)
+        pd.read_sql('staged', postgres_engine)
+
 
 
 
