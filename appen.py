@@ -15,7 +15,7 @@ raw_path = CURR_DIR_PATH + "/raw/"
 harmonized_path = CURR_DIR_PATH + "/harmonized/"
 cleansed_path = CURR_DIR_PATH + "/cleansed/"
 
-API_KEY = 'df731731dd73ec2cb7b035dd1faccf7c'
+API_KEY = 'Your API KEY'
 lat = 59.9
 lon = 17.6
 URL = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}"
